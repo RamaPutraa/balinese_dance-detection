@@ -9,7 +9,7 @@ from tkinter import filedialog
 # Konfigurasi
 MAX_FRAMES = 50
 NUM_FEATURES = 99
-LABELS = ['baris', 'pendet', 'rejang_sari']
+LABELS = ['baris', 'pendet', 'gopala']
 MODEL_PATH = 'src/model/best_model.h5'
 
 # Load model
