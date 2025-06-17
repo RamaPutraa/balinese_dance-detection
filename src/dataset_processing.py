@@ -10,7 +10,7 @@ DATA_DIR = 'data/extracted_keypoints'
 SAVE_DIR = 'data/result_processing'   # Folder untuk hasil split
 MAX_FRAMES = 50  # Jumlah frame tetap (sequence length)
 NUM_FEATURES = 99  # 33 keypoint * 3 koordinat
-LABELS = ['baris', 'pendet', 'rejang_sari']  # urutan label
+LABELS = ['baris', 'gopala', 'pendet','puspanjali','sekar_jagat']  # urutan label
 
 def load_keypoints():
     X = []
