@@ -22,7 +22,7 @@ class DanceRecognitionApp:
         # Konfigurasi
         self.MAX_FRAMES = 50
         self.NUM_FEATURES = 99
-        self.LABELS = ['Tari Baris', 'Tari Pendet', 'Tari Rejang Sari']
+        self.LABELS = ['Tari Baris', 'Tari Gopala', 'Tari Pendet', 'Tari Puspanjali', 'Tari Sekar Jagat']
         self.MODEL_PATH = 'src/model/best_model.h5'
         self.REFERENCE_PATH = 'data/extracted_keypoints'  # Path ke direktori data referensi
         
@@ -62,7 +62,7 @@ class DanceRecognitionApp:
         reference_data = {}
         
         # Load untuk setiap jenis tarian
-        for i, dance_type in enumerate(["baris", "pendet", "rejang_sari"]):
+        for i, dance_type in enumerate(["baris", "gopala", "pendet", "puspanjali", "sekar_jagat"]):
             reference_data[i] = []
             
             # Cari semua file .npy untuk tipe tarian ini
