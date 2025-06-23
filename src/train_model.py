@@ -1,4 +1,5 @@
 import os
+import random
 import numpy as np
 import collections
 import seaborn as sns
@@ -6,43 +7,82 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional,BatchNormalization
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.optimizers import Adam
+import tensorflow as tf
+
+# ========== SET RANDOM SEED ==========
+def set_seed(seed=42):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
+
+set_seed(42)
 
 # ========== Load Dataset ==========
-X_train = np.load('data/result_processing/X_train.npy')
-y_train = np.load('data/result_processing/y_train.npy')
-X_val = np.load('data/result_processing/X_val.npy')
-y_val = np.load('data/result_processing/y_val.npy')
-X_test = np.load('data/result_processing/X_test.npy')
-y_test = np.load('data/result_processing/y_test.npy')
+X_train = np.load('data/result_processing_aug/X_train.npy')
+y_train = np.load('data/result_processing_aug/y_train.npy')
+X_val = np.load('data/result_processing_aug/X_val.npy')
+y_val = np.load('data/result_processing_aug/y_val.npy')
+X_test = np.load('data/result_processing_aug/X_test.npy')
+y_test = np.load('data/result_processing_aug/y_test.npy')
 
 print("X_train shape:", X_train.shape)
 print("y_train shape:", y_train.shape)
 
 LABELS = ['baris', 'gopala', 'pendet', 'puspanjali', 'sekar_jagat']
-sequence_length = X_train.shape[1]   # 50
-num_features = X_train.shape[2]      # 99
-num_classes = y_train.shape[1]       # 5
+sequence_length = X_train.shape[1]
+num_features = X_train.shape[2]
+num_classes = y_train.shape[1]
 
 # ========== Build Model ==========
 model = Sequential([
-    Bidirectional(LSTM(64, return_sequences=True), input_shape=(sequence_length, num_features)),
+    Bidirectional(LSTM(128, return_sequences=True), input_shape=(50, 99)),
     Dropout(0.3),
+    BatchNormalization(),
+
     Bidirectional(LSTM(64)),
     Dropout(0.3),
+    BatchNormalization(),
+
     Dense(64, activation='relu'),
     Dropout(0.3),
-    Dense(num_classes, activation='softmax')
+
+    Dense(5, activation='softmax')  # 5 kelas
 ])
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(
+    optimizer=Adam(learning_rate=1e-3),
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
 model.summary()
 
 # ========== Setup Checkpoint & EarlyStopping ==========
 os.makedirs('src/model', exist_ok=True)
-checkpoint = ModelCheckpoint('src/model/best_model.h5', monitor='val_accuracy', save_best_only=True, mode='max', verbose=1)
-early_stop = EarlyStopping(patience=10, restore_best_weights=True)
+checkpoint = ModelCheckpoint(
+    'src/model/best_model.h5',
+    monitor='val_accuracy',
+    save_best_only=True,
+    mode='max',
+    verbose=1
+)
+
+early_stop = EarlyStopping(
+    patience=15,
+    restore_best_weights=True,
+    monitor='val_loss'
+)
+
+reduce_lr = ReduceLROnPlateau(
+    monitor='val_loss',
+    factor=0.5,
+    patience=5,
+    min_lr=1e-6,
+    verbose=1
+)
 
 # ========== Train Model ==========
 history = model.fit(
@@ -50,7 +90,7 @@ history = model.fit(
     epochs=100,
     batch_size=8,
     validation_data=(X_val, y_val),
-    callbacks=[checkpoint, early_stop],
+    callbacks=[checkpoint, early_stop, reduce_lr],
     verbose=1
 )
 
